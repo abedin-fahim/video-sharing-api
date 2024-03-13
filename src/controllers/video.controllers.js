@@ -7,57 +7,50 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import { StatusCodes } from 'http-status-codes';
 
-const isAuthorized = async (videoId, user) => {
+const isAuthorized = async (videoId, userId) => {
   const video = await Video.findById(videoId);
-  return video.owner === user;
+  return video.owner.toString() === userId.toString();
 };
 
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+  const { page = 1, limit = 10, query, sortBy, sortType } = req.query;
   let videosPipeline = [];
-
-  if (userId) {
-    if (!isValidObjectId(userId)) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid user id');
-    }
-
-    videosPipeline.push({
-      $match: {
-        owner: new mongoose.Types.ObjectId(userId),
-        isPublished: true,
-      },
-    });
-  }
 
   if (query) {
     videosPipeline.push({
       $match: {
-        $text: {
-          $search: query,
-        },
+        $or: [
+          { title: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+        ],
         isPublished: true,
-      },
-      $lookup: {
-        from: 'user',
-        localField: 'owner',
-        foreignField: '_id',
-        as: 'owner',
-      },
-      $project: {
-        videoFile: 1,
-        thumbnail: 1,
-        title: 1,
-        description: 1,
-        views: 1,
-        duration: 1,
-        owner: {
-          avatar: 1,
-          fullName: true,
-          username: 1,
-        },
       },
     });
   }
+
+  videosPipeline.push({
+    $lookup: {
+      from: 'user',
+      localField: 'owner',
+      foreignField: '_id',
+      as: 'owner',
+    },
+  });
+  videosPipeline.push({
+    $project: {
+      videoFile: 1,
+      thumbnail: 1,
+      title: 1,
+      description: 1,
+      views: 1,
+      duration: 1,
+      owner: {
+        avatar: 1,
+        fullName: true,
+        username: 1,
+      },
+    },
+  });
 
   // Sorting
   if (sortBy && sortType) {
@@ -75,23 +68,31 @@ const getAllVideos = asyncHandler(async (req, res) => {
     limit,
   };
 
-  const videosAggregate = await Video.aggregate(videosPipeline);
-  const videosPagination = await Video.aggregatePaginate(
-    videosAggregate,
-    options
-  );
+  try {
+    const videosAggregate = await Video.aggregate(videosPipeline);
+    const videosPagination = await Video.aggregatePaginate(
+      videosAggregate[0],
+      options
+    );
 
-  if (!videosPagination || videosPagination.length === 0) {
+    if (!videosPagination || videosPagination.length === 0) {
+      return res
+        .status(StatusCodes.OK)
+        .json(new ApiResponse(StatusCodes.OK, {}, 'No videos found'));
+    }
+
     return res
       .status(StatusCodes.OK)
-      .json(new ApiResponse(StatusCodes.OK, {}, 'No videos found'));
-  }
-
-  return res
-    .status(StatusCodes.OK)
-    .json(
-      new ApiResponse(StatusCodes.OK, videosPagination[0], 'Videos fetched')
+      .json(
+        new ApiResponse(StatusCodes.OK, videosPagination, 'Videos fetched')
+      );
+  } catch (error) {
+    throw new ApiError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      'Could not fetch videos',
+      error?.message
     );
+  }
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -121,9 +122,16 @@ const publishAVideo = asyncHandler(async (req, res) => {
   const video = await Video.create({
     title,
     description,
-    videoFile: videoFile.url,
-    thumbnail: thumbnail.url,
-    owner: userId,
+    videoFile: {
+      publicId: videoFile.public_id,
+      url: videoFile.url,
+    },
+    thumbnail: {
+      publicId: thumbnail.public_id,
+      url: thumbnail.url,
+    },
+    duration: videoFile.duration,
+    owner: new mongoose.Types.ObjectId(userId),
     isPublished,
   });
 
@@ -142,11 +150,11 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 
-  const video = Video.aggregate([
+  const video = await Video.aggregate([
     {
       $match: {
         _id: new mongoose.Types.ObjectId(videoId),
-        isPublished: true,
+        // isPublished: true,
       },
     },
     {
@@ -226,7 +234,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Title can not be empty');
   }
   if (!description) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Title can not be empty');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Description can not be empty');
   }
 
   const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);

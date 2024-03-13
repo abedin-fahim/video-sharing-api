@@ -16,7 +16,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
 
     const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const user = await User.findById(payload?._id).select(
-      '-password -refreshToken'
+      '-password -refreshToken -avatar.publicId -coverImage.publicId'
     );
 
     if (!user) {

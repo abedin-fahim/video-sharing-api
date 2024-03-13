@@ -74,8 +74,14 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await User.create({
     fullName,
     username: username.toLowerCase(),
-    avatar: avatar.url,
-    coverImage: coverImage?.url || '',
+    avatar: {
+      publicId: avatar.public_id,
+      url: avatar.url,
+    },
+    coverImage: {
+      publicId: coverImage?.public_id || '',
+      url: coverImage?.url,
+    },
     password,
     email,
   });
@@ -125,7 +131,7 @@ const loginUser = asyncHandler(async (req, res) => {
   );
 
   const loggedInUser = await User.findById(existingUser._id).select(
-    '-password -refreshToken'
+    '-password -refreshToken -avatar.publicId -coverImage.publicId'
   );
 
   const options = { httpOnly: true, secure: true };
