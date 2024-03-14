@@ -13,7 +13,12 @@ const tweetSchema = new mongoose.Schema(
       required: true,
     },
     image: {
-      type: String,
+      publicId: {
+        type: String,
+      },
+      url: {
+        type: String,
+      },
     },
   },
   { timestamps: true }

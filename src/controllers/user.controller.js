@@ -438,7 +438,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
       $match: {
         // We can directly access the _id like this, bc mongoose doesn't work in the aggregate methods, so it doesn't convert the id;
         // Basically, we have to do it ourself
-        _id: new mongoose.Types.ObjectId(req.user._id),
+        _id: new mongoose.Types.ObjectId(req.user?._id),
       },
     },
     {
@@ -482,7 +482,13 @@ const getWatchHistory = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new ApiResponse(201, user[0].watchHistory, 'Watch history returned'));
+    .json(
+      new ApiResponse(
+        StatusCodes.OK,
+        user[0].watchHistory,
+        'Watch history returned'
+      )
+    );
 });
 
 export {
