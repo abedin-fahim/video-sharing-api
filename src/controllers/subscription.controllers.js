@@ -8,39 +8,28 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 const toggleSubscription = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
 
-  try {
-    const subscriber = Subscription.findOneAndDelete({
-      subscriber: req.user?._id,
+  const subscriber = await Subscription.findOneAndDelete({
+    subscriber: req.user?._id,
+    channel: channelId,
+  });
+
+  if (!subscriber) {
+    const newSubscriber = await Subscription.create({
       channel: channelId,
+      subscriber: req.user?.id,
     });
 
-    if (!subscriber) {
-      const newSubscriber = await Subscription.create({
-        channel: channelId,
-        subscriber: req.user?.id,
-      });
-
-      return res
-        .status(StatusCodes.OK)
-        .json(
-          new ApiResponse(StatusCodes.OK, newSubscriber, 'Subscription added')
-        );
-    }
     return res
       .status(StatusCodes.OK)
       .json(
-        new ApiResponse(StatusCodes.OK, subscriber, 'Subscription removed')
+        new ApiResponse(StatusCodes.OK, newSubscriber, 'Subscription added')
       );
-  } catch (error) {
-    throw new ApiError(
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      'Could not toggle subscription',
-      error?.message
-    );
   }
+  return res
+    .status(StatusCodes.OK)
+    .json(new ApiResponse(StatusCodes.OK, subscriber, 'Subscription removed'));
 });
 
-// controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
   const { page = 1, limit = 10 } = req.query;
@@ -58,6 +47,15 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
           localField: 'subscriber',
           foreignField: '_id',
           as: 'subscribers',
+          // pipeline: [
+          //   {
+          //     $project: {
+          //       username: 1,
+          //       avatar: 1,
+          //       fullName: 1,
+          //     },
+          //   },
+          // ],
         },
       },
       {
@@ -66,31 +64,35 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
           localField: 'channel',
           foreignField: '_id',
           as: 'owner',
+          pipeline: [
+            {
+              $project: {
+                fullName: 1,
+                avatar: 1,
+                username: 1,
+              },
+            },
+          ],
         },
       },
       {
         $addFields: {
+          owner: {
+            $first: '$owner',
+          },
+          // subscribers: {
+          //   $first: '$subscribers',
+          // },
           subscriberCount: {
             $size: '$subscribers',
           },
         },
       },
       {
-        $project: {
-          channel: 1,
-          subscriberCount: 1,
-          subscribers: {
-            username: '$subscribers.username',
-            avatar: '$subscribers.avatar',
-            fullName: '$subscribers.fullName',
-          },
-          // Both approach are just fine.
-          owner: {
-            username: 1,
-            avatar: 1,
-            fullName: 1,
-          },
-        },
+        $skip: page,
+      },
+      {
+        $limit: limit,
       },
     ]);
 
@@ -98,20 +100,14 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
       throw new ApiError(StatusCodes.BAD_REQUEST, 'Channel has no followers');
     }
 
-    const options = {
-      page,
-      limit,
-    };
-
-    const subscribers = await Subscription.aggregatePaginate(
-      subscriberAggregate,
-      options
-    );
-
     return res
       .status(StatusCodes.OK)
       .json(
-        new ApiResponse(StatusCodes.OK, subscribers, 'Subscribers returned')
+        new ApiResponse(
+          StatusCodes.OK,
+          subscriberAggregate[0],
+          'Subscribers returned'
+        )
       );
   } catch (error) {
     throw new ApiError(
@@ -126,65 +122,70 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
   const { page = 1, limit = 10 } = req.query;
 
-  try {
-    const followingAggregate = await Subscription.aggregate([
-      {
-        $match: {
-          subscriber: new mongoose.Types.ObjectId(subscriberId),
-        },
+  const followingAggregate = await Subscription.aggregate([
+    {
+      $match: {
+        subscriber: new mongoose.Types.ObjectId(subscriberId),
       },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'subscriber',
-          foreignField: '_id',
-          as: 'following',
-        },
-      },
-      {
-        $addFields: {
-          channelCount: {
-            $size: '$following',
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'subscriber',
+        foreignField: '_id',
+        as: 'following',
+        pipeline: [
+          {
+            $project: {
+              avatar: 1,
+              fullName: 1,
+              username: 1,
+            },
           },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        channelCount: {
+          $size: '$following',
         },
       },
-      {
-        $project: {
-          _id: 1,
-          channelCount: 1,
-          following: {
-            username: '$following.username',
-            avatar: '$following.avatar',
-            fullName: '$following.fullName',
-          },
-        },
-      },
-    ]);
+    },
+    // {
+    //   $project: {
+    //     _id: 1,
+    //     channelCount: 1,
+    //     following: {
+    //       username: 1,
+    //       avatar: 1,
+    //       fullName: 1,
+    //     },
+    //   },
+    // },
+    {
+      $skip: page,
+    },
+    {
+      $limit: limit,
+    },
+  ]);
 
-    const options = {
-      page,
-      limit,
-    };
-
-    const following = Subscription.aggregatePaginate(
-      followingAggregate,
-      options
-    );
-
-    if (!following?.length) {
-      throw new ApiError(StatusCodes.NOT_FOUND, 'No channel found');
-    }
-
+  if (!followingAggregate?.length) {
     return res
       .status(StatusCodes.OK)
-      .json(new ApiResponse(StatusCodes.OK, following, 'Following fetched'));
-  } catch (error) {
-    throw new ApiError(
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      'Error while fetching following',
-      error?.message
-    );
+      .json(new ApiResponse(StatusCodes.OK, {}, 'No channel subscribed'));
   }
+
+  return res
+    .status(StatusCodes.OK)
+    .json(
+      new ApiResponse(
+        StatusCodes.OK,
+        followingAggregate[0],
+        'Following fetched'
+      )
+    );
 });
 
 export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
