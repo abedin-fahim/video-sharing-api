@@ -8,11 +8,10 @@ import { Video } from '../models/video.model.js';
 
 const isUserPlaylistOwner = async (playlistId, userId) => {
   const playlist = await Playlist.findById(playlistId);
-
   if (!playlist) {
     return false;
   }
-
+  console.log(playlist.owner.toString(), userId.toString());
   return playlist?.owner.toString() === userId.toString();
 };
 
@@ -58,13 +57,15 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     },
     {
       $project: {
+        _id: 1,
         name: 1,
         description: 1,
         videos: 1,
         playlist: {
           username: 1,
           fullName: 1,
-          avatar: 1,
+          // Excluding the public id here
+          'avatar.url': 1,
         },
       },
     },
@@ -84,12 +85,9 @@ const getPlaylistById = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
 
   if (!playlistId) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Playlist id is required');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Playlist id is required');
   }
 
-  // There is potentially an error here in the following aggregation in the second pipeline,
-  // I'm suppose to search only te user who's the playlist owner
-  // I feel like it should be working
   const playlist = await Playlist.aggregate([
     {
       $match: {
@@ -112,14 +110,22 @@ const getPlaylistById = asyncHandler(async (req, res) => {
         playlist: {
           username: 1,
           fullName: 1,
-          avatar: 1,
+          'avatar.url': 1,
         },
       },
     },
   ]);
 
-  if (playlist?.length) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'No playlist found with the id');
+  if (!playlist?.length) {
+    return res
+      .status(StatusCodes.OK)
+      .json(
+        new ApiResponse(
+          StatusCodes.OK,
+          playlist[0],
+          'No playlist found with the id'
+        )
+      );
   }
 
   return res
@@ -134,19 +140,21 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   // Only the owner can update the playlist i.e add video, remove video, and update details
   // This functionality is needed is many endpoints.
   // So creating a separate function (which can be in a utils file and pass down the user)
-  const playlist = await isUserPlaylistOwner(playlistId, videoId);
+  const playlist = await isUserPlaylistOwner(playlistId, req.user?._id);
 
   if (!playlist) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Playlist does not exist');
   }
-
+  const playlistToBeUpdated = await Playlist.findById(playlistId);
   const isVideoExist = await Video.findById(videoId);
   if (!isVideoExist) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Video not found');
   }
 
-  playlist.video.push(videoId);
-  const updatedPlaylist = await playlist.save({ validateBeforeSave: false });
+  playlistToBeUpdated.videos.push(videoId);
+  const updatedPlaylist = await playlistToBeUpdated.save({
+    validateBeforeSave: false,
+  });
 
   if (!updatedPlaylist) {
     throw new ApiError(
