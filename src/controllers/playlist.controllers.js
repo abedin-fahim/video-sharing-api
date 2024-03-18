@@ -1,4 +1,4 @@
-import mongoose, { isValidObjectId } from 'mongoose';
+import mongoose from 'mongoose';
 import { Playlist } from '../models/playlist.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
@@ -178,7 +178,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
   const { videoId } = req.body;
 
-  const validity = await isUserPlaylistOwner(playlistId, videoId);
+  const validity = await isUserPlaylistOwner(playlistId, req.user?._id);
   if (!validity) {
     throw new ApiError(StatusCodes.UNAUTHORIZED, 'User can not remove video');
   }
@@ -188,7 +188,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     {
       // the $pull operator, which removes all instances of a specified value (videoId in this case) from an array
       $pull: {
-        video: videoId,
+        videos: videoId,
       },
     },
     { new: true }
@@ -203,7 +203,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 
   return res
     .status(StatusCodes.OK)
-    .json(new ApiResponse(StatusCodes.OK, updatePlaylist, 'Video removed'));
+    .json(new ApiResponse(StatusCodes.OK, updatedPlaylist, 'Video removed'));
 });
 
 const deletePlaylist = asyncHandler(async (req, res) => {
