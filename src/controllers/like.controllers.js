@@ -1,4 +1,4 @@
-import mongoose, { isValidObjectId } from 'mongoose';
+import mongoose from 'mongoose';
 import { Like } from '../models/like.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
@@ -7,9 +7,9 @@ import { StatusCodes } from 'http-status-codes';
 
 const toggleVideoLike = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  // It's assumed that video already exist.
+  // It's assumed that video already exist, this request can come from a valid video.
 
-  // Also, There could be case made that the video is found but couldn't deleted, that seems to me can be negligible.
+  // Also, There could be case made that the video is found but couldn't deleted, that seems can be negligible.
   // That approached is following in toggleCommentLike controller
   const isVideoLiked = await Like.findOneAndDelete({
     video: videoId,
@@ -100,7 +100,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
 
   try {
     // The localField while using $lookup operator will be based on the model here
-    const videoAggregate = await Likes.aggregate([
+    const videoAggregate = await Like.aggregate([
       {
         $match: {
           likedBy: new mongoose.Types.ObjectId(_id),
@@ -117,72 +117,67 @@ const getLikedVideos = asyncHandler(async (req, res) => {
           as: 'likedVideos',
         },
       },
-      // {
-      //   // Converts array into elements
-      //   $unwind: '$likedVideos',
-      // },
+      {
+        $addFields: {
+          totalLikedVideos: { $sum: 1 },
+        },
+      },
+      {
+        $unwind: '$likedVideos',
+      },
       {
         $lookup: {
           from: 'users',
-          // let: {owner_id: "$likedVideos.owner"}
-          pipeline: [
-            {
-              $match: {
-                // $expr: { $eq: [_id, '$owner_id'] },
-                $expr: { $eq: [_id, '$likedVideos.owner'] },
-              },
-            },
-            {
-              $project: {
-                fullName: 1,
-                avatar: 1,
-                username: 1,
-              },
-            },
-          ],
+          localField: 'likedBy',
+          foreignField: '_id',
           as: 'owner',
         },
       },
-      // {
-      //   $unwind: '$owner',
-      // },
+      {
+        $unwind: '$owner',
+      },
       {
         $project: {
-          _id: '$likedVideos._id',
-          title: '$likedVideos.title',
-          thumbnail: '$likedVideos.thumbnail',
-          duration: '$likedVideos.duration',
+          _id: 1,
+          video: 1,
+          likedVideos: {
+            title: 1,
+            duration: 1,
+            'thumbnail.url': 1,
+          },
           owner: {
-            fullName: '$owner.fullName',
-            avatar: '$owner.avatar',
-            username: '$owner.username',
+            fullName: 1,
+            avatar: 1,
+            username: 1,
           },
         },
+      },
+      {
+        $skip: (page - 1) * limit,
+      },
+      {
+        $limit: limit,
       },
     ]);
 
     if (!videoAggregate || videoAggregate.length === 0) {
-      return new ApiResponse(StatusCodes.NOT_FOUND, {}, 'No videos found!');
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json(new ApiResponse(StatusCodes.NOT_FOUND, {}, 'No videos found!'));
     }
-
-    const options = {
-      page,
-      limit,
-    };
-
-    const videos = await Like.aggregatePaginate(videoAggregate, options);
 
     return res
       .status(StatusCodes.OK)
       .json(
-        new ApiResponse(StatusCodes.OK, videos[0], 'Video fetched successfully')
+        new ApiResponse(
+          StatusCodes.OK,
+          videoAggregate,
+          'Video fetched successfully'
+        )
       );
   } catch (error) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Error fetching videos',
-      error?.message
-    );
+    console.log(error);
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Error fetching videos', error);
   }
 });
 
