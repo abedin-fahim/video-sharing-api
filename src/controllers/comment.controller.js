@@ -24,7 +24,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
   const commentAggregate = await Comment.aggregate([
     {
       $match: {
-        _id: new mongoose.Types.ObjectId(videoId),
+        video: new mongoose.Types.ObjectId(videoId),
       },
     },
     {
@@ -51,15 +51,6 @@ const getVideoComments = asyncHandler(async (req, res) => {
         owner: {
           $first: '$owner',
         },
-        isLiked: {
-          $cond: {
-            $if: {
-              $in: [req.user?._id, '$likes.likedBy'],
-              then: true,
-              else: false,
-            },
-          },
-        },
       },
     },
     {
@@ -78,29 +69,29 @@ const getVideoComments = asyncHandler(async (req, res) => {
   ]);
   // console.log(commentAggregate);
 
-  const options = {
-    page,
-    limit,
-  };
-  const comments = await Comment.aggregatePaginate(commentAggregate, options);
-  // console.log(comments);
+  // const options = {
+  //   page,
+  //   limit,
+  // };
+  // const comments = await Comment.aggregatePaginate(commentAggregate, options);
+  // // console.log(comments);
 
-  if (sort === 'new') {
-    comments.sort('asc');
-  }
+  // if (sort === 'new') {
+  //   comments.sort('asc');
+  // }
 
-  if (!comments || comments.length === 0) {
-    return res
-      .status(StatusCodes.OK)
-      .json(new ApiResponse(StatusCodes.OK, {}, 'Video has no comments'));
-  }
+  // if (!comments || comments.length === 0) {
+  //   return res
+  //     .status(StatusCodes.OK)
+  //     .json(new ApiResponse(StatusCodes.OK, {}, 'Video has no comments'));
+  // }
 
   return res
     .status(StatusCodes.OK)
     .json(
       new ApiResponse(
         StatusCodes.OK,
-        comments[0],
+        commentAggregate,
         'Comments fetched successfully'
       )
     );
@@ -118,18 +109,31 @@ const addComment = asyncHandler(async (req, res) => {
   const video = await Video.findById(videoId);
 
   if (!video || !video.isPublished) {
-    throw new ApiError(404, 'Video can not be found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Video can not be found');
   }
 
-  const comment = await Comment.create({
-    videoId,
-    content,
-    owner,
-  });
+  try {
+    const comment = await Comment.create({
+      video: videoId,
+      content,
+      owner,
+    });
 
-  return res.status(
-    new ApiResponse(StatusCodes.CREATED, comment, 'Comment successfully added')
-  );
+    return res
+      .status(StatusCodes.OK)
+      .json(
+        new ApiResponse(
+          StatusCodes.CREATED,
+          comment,
+          'Comment successfully added'
+        )
+      );
+  } catch (error) {
+    throw new ApiError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      'Comment could not be created'
+    );
+  }
 });
 
 const updateComment = asyncHandler(async (req, res) => {
@@ -154,7 +158,7 @@ const updateComment = asyncHandler(async (req, res) => {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Comment not found');
   }
 
-  if (_id !== comment.owner) {
+  if (!_id.equals(comment.owner)) {
     throw new ApiError(
       StatusCodes.UNAUTHORIZED,
       'Unauthorized to update comment'
@@ -170,15 +174,23 @@ const updateComment = asyncHandler(async (req, res) => {
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
   const { commentId } = req.body;
 
   if (!commentId.trim()) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Comment Id can not be empty');
   }
 
-  const comment = await Comment.findByIdAndDelete(commentId);
+  const comment = await Comment.findOneAndDelete({
+    _id: commentId,
+    owner: _id,
+  });
+
   if (!comment) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Could not delete comment');
+    throw new ApiError(
+      StatusCodes.UNAUTHORIZED,
+      'Not authorized to delete comment or comment does not exist'
+    );
   }
 
   return res

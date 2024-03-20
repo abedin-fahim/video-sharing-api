@@ -9,13 +9,13 @@ import {
 
 const router = Router();
 
-// When the whole needs to be verified
+// When the whole route needs to be verified
 router.use(verifyJWT);
 
 // Routes
-router.route('/get-video-comments/:videoId/results').get(getVideoComments);
-router.route('/add-comment').post(addComment);
-router.route('/update-comment').patch(updateComment);
+router.route('/get-video-comments/:videoId').get(getVideoComments);
+router.route('/add-comment/:videoId').post(addComment);
+router.route('/update-comment/:videoId').patch(updateComment);
 router.route('/delete-comment').delete(deleteComment);
 
 export default router;

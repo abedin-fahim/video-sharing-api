@@ -137,12 +137,12 @@ const loginUser = asyncHandler(async (req, res) => {
   const options = { httpOnly: true, secure: true };
 
   return res
-    .status(200)
+    .status(StatusCodes.OK)
     .cookie('accessToken', accessToken, options)
     .cookie('refreshToken', refreshToken, options)
     .json(
       new ApiResponse(
-        200,
+        StatusCodes.OK,
         {
           user: loggedInUser,
           accessToken,
