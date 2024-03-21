@@ -175,7 +175,7 @@ const updateComment = asyncHandler(async (req, res) => {
 
 const deleteComment = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const { commentId } = req.body;
+  const { commentId } = req.params;
 
   if (!commentId.trim()) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Comment Id can not be empty');
