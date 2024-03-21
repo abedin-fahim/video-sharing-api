@@ -1,0 +1,2191 @@
+openapi: 3.0.0
+info:
+  title: Video Sharing API
+  description: >-
+    The Video Sharing API is a combinaiton of endpoints that allows developers
+    to access data which includes videos, playlists, tweets, likes, comments,
+    users and channels and aggregation of the models.
+  version: 1.0.0
+servers:
+  - url: https://video-sharing-api-t8bj.onrender.com/api/v1
+components:
+  securitySchemes:
+    noauthAuth:
+      type: http
+      scheme: noauth
+    bearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - bearerAuth: []
+tags:
+  - name: User
+    description: >-
+      User endpoints include registration, login, profile management (update
+      profile, cover, avatar, password), view profile and watch history.
+      Additionally, logout endpoint ends sessions while refresh token endpoint
+      maintains continuous access. These endpoints offer comprehensive user
+      account functionality for registration, authentication, customization, and
+      security management.
+  - name: Video
+    description: >-
+      Video endpoints dandles video-related operations such as uploading,
+      updating, deleting, and retrieving video content metadata. Allows users to
+      manage their video library efficiently, facilitating content creation,
+      organization, and consumption within the application.
+  - name: Tweet
+    description: >-
+      Manages tweet-related operations including creation, retrieval, update,
+      and deletion. Enables users to interact with tweets, fostering
+      communication and engagement within the platform.
+  - name: Subscription
+    description: >-
+      Handles subscription management allowing users to subscribe to other users
+      or content channels. Facilitates content discovery and enhances user
+      experience through personalized feeds.
+  - name: Playlist
+    description: >-
+      Facilitates playlist management enabling users to create, update, delete,
+      and retrieve playlists. Enhances user experience by organizing and
+      curating content according to user preferences.
+  - name: Like
+    description: >-
+      Manages likes on various content items such as tweets, or videos. Allows
+      users to express appreciation for content, fostering community engagement
+      and interaction.
+  - name: Healthcheck
+    description: >-
+      Provides a health check mechanism to monitor the operational status of the
+      system. Enables administrators to ensure system availability and
+      reliability by verifying key components and dependencies.
+  - name: Comment
+    description: >-
+      Handles comment-related operations allowing users to add, edit, delete,
+      and view comments on various content items. Facilitates discussion and
+      interaction within the platform.
+paths:
+  /users/register/:
+    post:
+      tags:
+        - User
+      summary: Register user
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                  example: Joynal Abedin
+                username:
+                  type: string
+                  example: fahim2
+                password:
+                  type: string
+                  example: qwerty123
+                email:
+                  type: string
+                  example: fahim2@example.com
+                coverImage:
+                  type: string
+                  format: binary
+                avatar:
+                  type: string
+                  format: binary
+      security:
+        - noauthAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/login:
+    post:
+      tags:
+        - User
+      summary: Login User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: fahim
+                password:
+                  type: string
+                  example: qwerty123
+              example:
+                username: fahim
+                password: qwerty123
+      security:
+        - noauthAuth: []
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Set-Cookie:
+              schema:
+                type: string
+                example: >-
+                  refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NWYzY2Q4NGJkNTg4ZmZiODQxNmViZWIiLCJpYXQiOjE3MTA4Mjk4MTgsImV4cCI6MTcxMTY5MzgxOH0.LZoxAomD0Ze61q4R3r4Rlw0bg-4a8KfOIsR-8CZegIg;
+                  Path=/; HttpOnly; Secure
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '998'
+            ETag:
+              schema:
+                type: string
+                example: W/"3e6-MY3cgOj1mR+1EvtxqTNsgRgxcUc"
+            Date:
+              schema:
+                type: string
+                example: Tue, 19 Mar 2024 06:30:18 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data:
+                  user:
+                    avatar:
+                      url: >-
+                        http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                    coverImage:
+                      url: >-
+                        http://res.cloudinary.com/di1akm5rx/image/upload/v1710476676/ka67enm5vnkkmc8f6nsl.png
+                    _id: 65f3cd84bd588ffb8416ebeb
+                    username: fahim2
+                    email: fahim2@example.com
+                    fullName: Joynal Abedin
+                    watchHistory: []
+                    createdAt: '2024-03-15T04:24:36.895Z'
+                    updatedAt: '2024-03-19T06:30:18.063Z'
+                    __v: 0
+                  accessToken: >-
+                    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NWYzY2Q4NGJkNTg4ZmZiODQxNmViZWIiLCJlbWFpbCI6ImZhaGltMkBleGFtcGxlLmNvbSIsInVzZXJuYW1lIjoiZmFoaW0yIiwiZnVsbE5hbWUiOiJKb3luYWwgQWJlZGluIiwiaWF0IjoxNzEwODI5ODE4LCJleHAiOjE3MTA5MTYyMTh9.WQkpsKNutKWdXcgOfPY5qzEMxKgfEuGXqA6SivobkJg
+                  refreshToken: >-
+                    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NWYzY2Q4NGJkNTg4ZmZiODQxNmViZWIiLCJpYXQiOjE3MTA4Mjk4MTgsImV4cCI6MTcxMTY5MzgxOH0.LZoxAomD0Ze61q4R3r4Rlw0bg-4a8KfOIsR-8CZegIg
+                message: User logged in successfully
+                success: true
+  /users/change-password/:
+    post:
+      tags:
+        - User
+      summary: Change Password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
+                  example: Ilovebangladesh
+                newPassword:
+                  type: string
+                  example: notanymore
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/refresh-token/:
+    post:
+      tags:
+        - User
+      summary: Refresh Token
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/profile/:
+    post:
+      tags:
+        - User
+      summary: Profile
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '508'
+            ETag:
+              schema:
+                type: string
+                example: W/"1fc-5KNectAjr3aMAMUThUkXsVaHlIk"
+            Date:
+              schema:
+                type: string
+                example: Tue, 19 Mar 2024 06:32:19 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data:
+                  avatar:
+                    url: >-
+                      http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                  coverImage:
+                    url: >-
+                      http://res.cloudinary.com/di1akm5rx/image/upload/v1710476676/ka67enm5vnkkmc8f6nsl.png
+                  _id: 65f3cd84bd588ffb8416ebeb
+                  username: fahim2
+                  email: fahim2@example.com
+                  fullName: Joynal Abedin
+                  watchHistory: []
+                  createdAt: '2024-03-15T04:24:36.895Z'
+                  updatedAt: '2024-03-19T06:30:18.063Z'
+                  __v: 0
+                message: User returned successfully
+                success: true
+  /users/update-profile/:
+    patch:
+      tags:
+        - User
+      summary: Update profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: fahim@example.com
+                fullName:
+                  type: string
+                  example: Joynal Abedin
+              example:
+                email: fahim@example.com
+                fullName: Joynal Abedin Fahim
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/update-avatar/:
+    patch:
+      tags:
+        - User
+      summary: Update avatar
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/update-cover/:
+    patch:
+      tags:
+        - User
+      summary: Update cover
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                coverImage:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/c/{username}:
+    get:
+      tags:
+        - User
+      summary: Channel Profile
+      parameters:
+        - name: username
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/history/:
+    get:
+      tags:
+        - User
+      summary: Watch history
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /users/logout/:
+    post:
+      tags:
+        - User
+      summary: Logout
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /videos/publish-video/:
+    post:
+      tags:
+        - Video
+      summary: Publish Video
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: New video
+                description:
+                  type: string
+                  example: Hello world description
+                thumbnail:
+                  type: string
+                  format: binary
+                videoFile:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '617'
+            ETag:
+              schema:
+                type: string
+                example: W/"269-Nu2bPo6v2VB7/Mb08K9bRNAhkK0"
+            Date:
+              schema:
+                type: string
+                example: Thu, 14 Mar 2024 08:36:13 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 201
+                data:
+                  videoFile:
+                    publicId: txp2fjvkkihmbnpbul5c
+                    url: >-
+                      http://res.cloudinary.com/di1akm5rx/video/upload/v1710405372/txp2fjvkkihmbnpbul5c.mp4
+                  thumbnail:
+                    publicId: ksi4z0xw2snp9hccn6hd
+                    url: >-
+                      http://res.cloudinary.com/di1akm5rx/image/upload/v1710405373/ksi4z0xw2snp9hccn6hd.png
+                  title: New video
+                  description: Hello world description
+                  duration: 52.477098
+                  view: 0
+                  isPublished: false
+                  owner: 65f133d90ed7002ea01cb749
+                  _id: 65f2b6fd393ac7088cb10791
+                  createdAt: '2024-03-14T08:36:13.815Z'
+                  updatedAt: '2024-03-14T08:36:13.815Z'
+                  __v: 0
+                message: Video uploaded
+                success: true
+  /videos/get-video-by-id/{videoId}:
+    parameters:
+      - in: path
+        name: videoId
+        schema:
+          type: string
+        required: true
+        description: The video ID
+    get:
+      tags:
+        - Video
+      summary: Get video by Id
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /videos/toggle-video-status/{videoId}:
+    parameters:
+      - in: path
+        name: videoId
+        schema:
+          type: integer
+        required: true
+        description: The video ID
+    post:
+      tags:
+        - Video
+      summary: Toggle video status
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /videos/update-video/{videoId}:
+    parameters:
+      - in: path
+        name: videoId
+        schema:
+          type: integer
+        required: true
+        description: The video ID
+    post:
+      tags:
+        - Video
+      summary: Update Video
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Me at the Zoo updated
+                description:
+                  type: string
+                  example: Me at the zoo description
+                thumbnail:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /videos/delete-video/{videoId}:
+    parameters:
+      - in: path
+        name: videoId
+        schema:
+          type: integer
+        required: true
+        description: The video ID
+    delete:
+      tags:
+        - Video
+      summary: Delete Video
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /tweets/create-tweet/:
+    post:
+      tags:
+        - Tweet
+      summary: Create tweet
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                content:
+                  type: string
+                  example: New tweet, it's not updated
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '262'
+            ETag:
+              schema:
+                type: string
+                example: W/"106-sWk6GTd0wZagXVUBSo7YyvNFX0w"
+            Date:
+              schema:
+                type: string
+                example: Thu, 14 Mar 2024 08:31:48 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data:
+                  owner: 65f133d90ed7002ea01cb749
+                  content: New tweet, it's not updated
+                  _id: 65f2b5f4dd357a74cc3c9b2a
+                  createdAt: '2024-03-14T08:31:48.689Z'
+                  updatedAt: '2024-03-14T08:31:48.689Z'
+                  __v: 0
+                message: Tweet created
+                success: true
+  /tweets/get-user-tweets/:
+    get:
+      tags:
+        - Tweet
+      summary: Get user tweets
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '643'
+            ETag:
+              schema:
+                type: string
+                example: W/"283-8Kxp7+HKe7HpKm/POycg+fxsQCk"
+            Date:
+              schema:
+                type: string
+                example: Thu, 14 Mar 2024 08:31:21 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data:
+                  - data:
+                      - _id: 65f283796974a1c01d9689ae
+                        owner: 65f133d90ed7002ea01cb749
+                        content: New and updated tweet
+                        image:
+                          publicId: my1xhxsfd0kgeqmy8sao
+                          url: >-
+                            http://res.cloudinary.com/di1akm5rx/image/upload/v1710392184/my1xhxsfd0kgeqmy8sao.jpg
+                        createdAt: '2024-03-14T04:56:25.249Z'
+                        updatedAt: '2024-03-14T08:30:57.957Z'
+                        __v: 0
+                        creator:
+                          _id: 65f133d90ed7002ea01cb749
+                          username: fahim
+                          fullName: Joynal Abedin
+                          avatar:
+                            publicId: b4uj6cwvadfh8zscfhro
+                            url: >-
+                              http://res.cloudinary.com/di1akm5rx/image/upload/v1710306263/b4uj6cwvadfh8zscfhro.png
+                message: User tweets fetched
+                success: true
+  /tweets/update-tweet/{tweetId}:
+    parameters:
+      - in: path
+        name: tweetId
+        schema:
+          type: integer
+        required: true
+        description: The tweet ID
+    patch:
+      tags:
+        - Tweet
+      summary: Update tweet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                content: New and updated tweet
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '394'
+            ETag:
+              schema:
+                type: string
+                example: W/"18a-REnNlgZBPc0OygH9LpP2t+aZkM0"
+            Date:
+              schema:
+                type: string
+                example: Thu, 14 Mar 2024 08:30:58 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data:
+                  image:
+                    publicId: my1xhxsfd0kgeqmy8sao
+                    url: >-
+                      http://res.cloudinary.com/di1akm5rx/image/upload/v1710392184/my1xhxsfd0kgeqmy8sao.jpg
+                  _id: 65f283796974a1c01d9689ae
+                  owner: 65f133d90ed7002ea01cb749
+                  content: New and updated tweet
+                  createdAt: '2024-03-14T04:56:25.249Z'
+                  updatedAt: '2024-03-14T08:30:57.957Z'
+                  __v: 0
+                message: Tweet updated
+                success: true
+  /tweets/delete-tweet/{tweetId}:
+    parameters:
+      - in: path
+        name: tweetId
+        schema:
+          type: integer
+        required: true
+        description: The tweet ID
+    delete:
+      tags:
+        - Tweet
+      summary: Delete tweet
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '69'
+            ETag:
+              schema:
+                type: string
+                example: W/"45-EcDI9cYohWaNURbofdF7IFqzVTs"
+            Date:
+              schema:
+                type: string
+                example: Thu, 14 Mar 2024 08:34:04 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data: {}
+                message: Tweet deleted
+                success: true
+  /subscription/toggle-subscription/{channelId}:
+    parameters:
+      - in: path
+        name: channelId
+        schema:
+          type: string
+        required: true
+        description: The channel ID
+    post:
+      tags:
+        - Subscription
+      summary: Toggle subscription
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties: {}
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '269'
+            ETag:
+              schema:
+                type: string
+                example: W/"10d-LUPivL5Nt/vargJH4KK1fkb75gA"
+            Date:
+              schema:
+                type: string
+                example: Fri, 15 Mar 2024 04:40:41 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: Subscription added
+                  value:
+                    statusCode: 200
+                    data:
+                      subscriber: 65f3cd84bd588ffb8416ebeb
+                      channel: 65f133d90ed7002ea01cb749
+                      _id: 65f3d14940fdda31e45a9272
+                      createdAt: '2024-03-15T04:40:41.084Z'
+                      updatedAt: '2024-03-15T04:40:41.084Z'
+                      __v: 0
+                    message: Subscription added
+                    success: true
+                example-1:
+                  summary: Subscription removed
+                  value:
+                    statusCode: 200
+                    data:
+                      _id: 65f3d14940fdda31e45a9272
+                      subscriber: 65f3cd84bd588ffb8416ebeb
+                      channel: 65f133d90ed7002ea01cb749
+                      createdAt: '2024-03-15T04:40:41.084Z'
+                      updatedAt: '2024-03-15T04:40:41.084Z'
+                      __v: 0
+                    message: Subscription removed
+                    success: true
+  /subscription/get-user-channel-subscribers/{channelId}:
+    parameters:
+      - in: path
+        name: channelId
+        schema:
+          type: string
+        required: true
+        description: The channel ID
+    get:
+      tags:
+        - Subscription
+      summary: Get user channel subscribers
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '754'
+            ETag:
+              schema:
+                type: string
+                example: W/"2f2-IVP1C/R5IdoOmAzcfys1IA1jS0c"
+            Date:
+              schema:
+                type: string
+                example: Sat, 16 Mar 2024 13:07:47 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data:
+                  _id: 65f5999086a8595e8f64ac0e
+                  subscriber: 65f3cd84bd588ffb8416ebeb
+                  channel: 65f133d90ed7002ea01cb749
+                  createdAt: '2024-03-16T13:07:28.411Z'
+                  updatedAt: '2024-03-16T13:07:28.411Z'
+                  __v: 0
+                  subscribers:
+                    _id: 65f3cd84bd588ffb8416ebeb
+                    username: fahim2
+                    fullName: Joynal Abedin
+                    avatar:
+                      publicId: wljbdiarvcrehsfskuyd
+                      url: >-
+                        http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                  owner:
+                    _id: 65f133d90ed7002ea01cb749
+                    username: fahim
+                    fullName: Joynal Abedin
+                    avatar:
+                      publicId: b4uj6cwvadfh8zscfhro
+                      url: >-
+                        http://res.cloudinary.com/di1akm5rx/image/upload/v1710306263/b4uj6cwvadfh8zscfhro.png
+                  subscriberCount: 1
+                message: Subscribers returned
+                success: true
+  /subscription/get-subscribed-channel/{channelId}:
+    get:
+      tags:
+        - Subscription
+      summary: Get subscribed channels
+      parameters:
+        - name: channelId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '77'
+            ETag:
+              schema:
+                type: string
+                example: W/"4d-YnYjTQS7djwWrweGzSBRAwvQyz0"
+            Date:
+              schema:
+                type: string
+                example: Sat, 16 Mar 2024 13:25:11 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data: {}
+                message: No channel subscribed
+                success: true
+  /playlist/create-playlist:
+    post:
+      tags:
+        - Playlist
+      summary: Create playlist
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: Second playlist
+                description: This is the description of the second playlist
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '323'
+            ETag:
+              schema:
+                type: string
+                example: W/"143-XkwduZbgX9We1tHYMyUnjZlNWJk"
+            Date:
+              schema:
+                type: string
+                example: Sun, 17 Mar 2024 06:32:13 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 201
+                data:
+                  name: First playlist
+                  description: This is the description of the first playlist
+                  videos: []
+                  owner: 65f3cd84bd588ffb8416ebeb
+                  _id: 65f68e6c57cd291bde738f4d
+                  createdAt: '2024-03-17T06:32:12.910Z'
+                  updatedAt: '2024-03-17T06:32:12.910Z'
+                  __v: 0
+                message: Playlist created
+                success: true
+  /playlist/get-user-playlist/{userId}:
+    get:
+      tags:
+        - Playlist
+      summary: Get user playlist
+      parameters:
+        - name: userId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '406'
+            ETag:
+              schema:
+                type: string
+                example: W/"196-s8T6F656vgQNcT3DDBAEdUUiA4U"
+            Date:
+              schema:
+                type: string
+                example: Sun, 17 Mar 2024 06:34:40 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data:
+                  - _id: 65f68e6c57cd291bde738f4d
+                    name: First playlist
+                    description: This is the description of the first playlist
+                    videos: []
+                    playlist:
+                      - username: fahim2
+                        fullName: Joynal Abedin
+                        avatar:
+                          publicId: wljbdiarvcrehsfskuyd
+                          url: >-
+                            http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                message: Playlists fetched
+                success: true
+  /playlist/get-playlist-by-id/{playlistId}:
+    get:
+      tags:
+        - Playlist
+      summary: Get playlist by id
+      parameters:
+        - name: playlistId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '371'
+            ETag:
+              schema:
+                type: string
+                example: W/"173-vrF2pLqTobTfPmxwAYJUa6FzlR0"
+            Date:
+              schema:
+                type: string
+                example: Sun, 17 Mar 2024 08:14:49 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: Success
+                  value:
+                    statusCode: 200
+                    data:
+                      - _id: 65f68e6c57cd291bde738f4d
+                        name: First playlist
+                        description: This is the description of the first playlist
+                        videos: []
+                        playlist:
+                          - username: fahim2
+                            fullName: Joynal Abedin
+                            avatar:
+                              url: >-
+                                http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                    message: Playlist fetched
+                    success: true
+                example-1:
+                  summary: Not found
+                  value:
+                    statusCode: 200
+                    message: No playlist found with the id
+                    success: true
+  /playlist/add-video-to-playlist/:
+    patch:
+      tags:
+        - Playlist
+      summary: Add video to playlist
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                playlistId: playlistId goes here
+                videoId: videoId goes here
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '73'
+            ETag:
+              schema:
+                type: string
+                example: W/"49-G325oMwVq+bl6rm3Un2FBcG422w"
+            Date:
+              schema:
+                type: string
+                example: Sun, 17 Mar 2024 08:40:36 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                message: Added video to the playlist
+                success: true
+  /playlist/remove-video-from-playlist/{playlistId}:
+    patch:
+      tags:
+        - Playlist
+      summary: Remove video from playlist
+      parameters:
+        - name: playlistId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                videoId: A video id
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '59'
+            ETag:
+              schema:
+                type: string
+                example: W/"3b-B3e5BzK/UdCFHXrFO5/baIrz3Ic"
+            Date:
+              schema:
+                type: string
+                example: Mon, 18 Mar 2024 05:55:37 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                message: Video removed
+                success: true
+  /playlist/update-playlist/{playlistId}:
+    patch:
+      tags:
+        - Playlist
+      summary: Update playlist
+      parameters:
+        - name: playlistId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: Updated title of the playlist
+                description: Updated description of the playlist
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '354'
+            ETag:
+              schema:
+                type: string
+                example: W/"162-wQXcBy9EFLWnbr9uGXnX5zs1mxc"
+            Date:
+              schema:
+                type: string
+                example: Mon, 18 Mar 2024 06:05:36 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 202
+                data:
+                  _id: 65f6aadb3a3af034003c0d11
+                  name: Updated title of the playlist
+                  description: Updated description of the playlist
+                  videos:
+                    - 65f13fe6cebe7cc98992bb54
+                  owner: 65f3cd84bd588ffb8416ebeb
+                  createdAt: '2024-03-17T08:33:31.533Z'
+                  updatedAt: '2024-03-18T06:05:36.042Z'
+                  __v: 2
+                message: Playlist updated
+                success: true
+  /playlist/delete-playlist/{playlistId}:
+    delete:
+      tags:
+        - Playlist
+      summary: Delete playlist
+      parameters:
+        - name: playlistId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '72'
+            ETag:
+              schema:
+                type: string
+                example: W/"48-ir0Aextf8nxtlIhOHfUHS1MdvUQ"
+            Date:
+              schema:
+                type: string
+                example: Mon, 18 Mar 2024 06:02:38 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data: {}
+                message: Playlist deleted
+                success: true
+  /likes/toggle-video-like/{videoId}:
+    post:
+      tags:
+        - Like
+      summary: Toggle video like
+      requestBody:
+        content: {}
+      parameters:
+        - name: videoId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '74'
+            ETag:
+              schema:
+                type: string
+                example: W/"4a-KQ6HLby3MiM8AiUgE2rBJ5Q2vdU"
+            Date:
+              schema:
+                type: string
+                example: Mon, 18 Mar 2024 06:15:29 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data: {}
+                message: Video like removed
+                success: true
+        '201':
+          description: Created
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '72'
+            ETag:
+              schema:
+                type: string
+                example: W/"48-xiEKtiDShNXbR1XlRlf3PFvGcCc"
+            Date:
+              schema:
+                type: string
+                example: Mon, 18 Mar 2024 06:15:00 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 201
+                data: {}
+                message: Video like added
+                success: true
+  /likes/toggle-comment-like/{commentId}:
+    post:
+      tags:
+        - Like
+      summary: Toggle comment like
+      requestBody:
+        content: {}
+      parameters:
+        - name: commentId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /likes/toggle-tweet-like/{tweetId}:
+    post:
+      tags:
+        - Like
+      summary: Toggle tweet like
+      requestBody:
+        content: {}
+      parameters:
+        - name: tweetId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /likes/get-liked-videos/:
+    get:
+      tags:
+        - Like
+      summary: Get liked videos of the logged in user
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '961'
+            ETag:
+              schema:
+                type: string
+                example: W/"3c1-hzIg+OR6BbPtraCNDVqQ5uMESZ0"
+            Date:
+              schema:
+                type: string
+                example: Mon, 18 Mar 2024 12:44:58 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data:
+                  - _id: 65f7df50963971d25eb102f2
+                    video: 65f13fe6cebe7cc98992bb54
+                    likedVideos:
+                      thumbnail:
+                        url: >-
+                          http://res.cloudinary.com/di1akm5rx/image/upload/v1710309349/zzkvmrjiwe4h308cqsb1.png
+                      title: Me at the zoo 2
+                      duration: 52.477098
+                    owner:
+                      username: fahim2
+                      fullName: Joynal Abedin
+                      avatar:
+                        publicId: wljbdiarvcrehsfskuyd
+                        url: >-
+                          http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                  - _id: 65f7e88704719fa52019ec99
+                    video: 65f140b31f293c81eab3025b
+                    likedVideos:
+                      thumbnail:
+                        url: >-
+                          http://res.cloudinary.com/di1akm5rx/image/upload/v1710309689/g1z4tnwajnqpm1guljmm.jpg
+                      title: Me at the Zoo updated
+                      duration: 52.477098
+                    owner:
+                      username: fahim2
+                      fullName: Joynal Abedin
+                      avatar:
+                        publicId: wljbdiarvcrehsfskuyd
+                        url: >-
+                          http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                message: Video fetched successfully
+                success: true
+  /status/health-check:
+    get:
+      tags:
+        - Healthcheck
+      summary: Status
+      security:
+        - noauthAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /comments/get-video-comments/{videoId}:
+    get:
+      tags:
+        - Comment
+      summary: Get all the comments of a video
+      security:
+        - noauthAuth: []
+      parameters:
+        - name: videoId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '1374'
+            ETag:
+              schema:
+                type: string
+                example: W/"55e-6L4c6jskp8wh9KuhVyl5UkeGcN4"
+            Date:
+              schema:
+                type: string
+                example: Tue, 19 Mar 2024 05:59:27 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data:
+                  - _id: 65f83feca01a028ea1e84f23
+                    content: This is the first comment
+                    owner:
+                      username: fahim2
+                      fullName: Joynal Abedin
+                      avatar:
+                        publicId: wljbdiarvcrehsfskuyd
+                        url: >-
+                          http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                    createdAt: '2024-03-18T13:21:48.740Z'
+                    likeCount: 0
+                  - _id: 65f926490c9955861bbc2dcb
+                    content: This is the second comment
+                    owner:
+                      username: fahim2
+                      fullName: Joynal Abedin
+                      avatar:
+                        publicId: wljbdiarvcrehsfskuyd
+                        url: >-
+                          http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                    createdAt: '2024-03-19T05:44:41.141Z'
+                    likeCount: 0
+                  - _id: 65f9264e0c9955861bbc2dcf
+                    content: This is the thrid comment
+                    owner:
+                      username: fahim2
+                      fullName: Joynal Abedin
+                      avatar:
+                        publicId: wljbdiarvcrehsfskuyd
+                        url: >-
+                          http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                    createdAt: '2024-03-19T05:44:46.473Z'
+                    likeCount: 0
+                  - _id: 65f926510c9955861bbc2dd3
+                    content: This is the fourth comment
+                    owner:
+                      username: fahim2
+                      fullName: Joynal Abedin
+                      avatar:
+                        publicId: wljbdiarvcrehsfskuyd
+                        url: >-
+                          http://res.cloudinary.com/di1akm5rx/image/upload/v1710476675/wljbdiarvcrehsfskuyd.png
+                    createdAt: '2024-03-19T05:44:49.574Z'
+                    likeCount: 0
+                message: Comments fetched successfully
+                success: true
+  /comments/add-comment/{commentId}:
+    post:
+      tags:
+        - Comment
+      summary: Add comment
+      parameters:
+        - name: commentId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                content: This is a nice comment
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '308'
+            ETag:
+              schema:
+                type: string
+                example: W/"134-1y6AeByGAKh2cZGmTz/WA4AJjuw"
+            Date:
+              schema:
+                type: string
+                example: Mon, 18 Mar 2024 13:25:30 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 201
+                data:
+                  content: This is the first comment
+                  video: 65f13fe6cebe7cc98992bb54
+                  owner: 65f3cd84bd588ffb8416ebeb
+                  _id: 65f840c9d7eb4c526561bed0
+                  createdAt: '2024-03-18T13:25:30.012Z'
+                  updatedAt: '2024-03-18T13:25:30.012Z'
+                  __v: 0
+                message: Comment successfully added
+                success: true
+  /comments/update-comment/{commentId}:
+    patch:
+      tags:
+        - Comment
+      summary: Update comment
+      parameters:
+        - name: commentId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                commentId: 65f840c9d7eb4c526561bed0
+                updatedContent: This is the first comment which has been updated
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '320'
+            ETag:
+              schema:
+                type: string
+                example: W/"140-ZgGX804hWB7gzE5Vnwjx6lil9Qs"
+            Date:
+              schema:
+                type: string
+                example: Tue, 19 Mar 2024 05:11:10 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data:
+                  _id: 65f840c9d7eb4c526561bed0
+                  content: This is the first comment which has been updated
+                  video: 65f13fe6cebe7cc98992bb54
+                  owner: 65f3cd84bd588ffb8416ebeb
+                  createdAt: '2024-03-18T13:25:30.012Z'
+                  updatedAt: '2024-03-19T05:11:10.843Z'
+                  __v: 0
+                message: Comment updated
+                success: true
+  /comments/delete-comment/{commentId}:
+    delete:
+      tags:
+        - Comment
+      parameters:
+        - name: commentId
+          in: path
+          schema:
+            type: string
+          required: true
+      summary: Delete comment
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '71'
+            ETag:
+              schema:
+                type: string
+                example: W/"47-q/3qgI/qU0m/9f8U7cOGR+V+vqI"
+            Date:
+              schema:
+                type: string
+                example: Tue, 19 Mar 2024 05:41:21 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                data: {}
+                message: Comment deleted
+                success: true
+        '401':
+          description: Unauthorized
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+            Access-Control-Allow-Credentials:
+              schema:
+                type: boolean
+                example: 'true'
+            Content-Security-Policy:
+              schema:
+                type: string
+                example: default-src 'none'
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+            Content-Type:
+              schema:
+                type: string
+                example: text/html; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '413'
+            Date:
+              schema:
+                type: string
+                example: Tue, 19 Mar 2024 05:36:06 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |-
+                <!DOCTYPE html>
+                <html lang="en">
+                    <head>
+                        <meta charset="utf-8">
+                        <title>Error</title>
+                    </head>
+                    <body>
+                        <pre>Error: Not authorized to delete comment or comment does not exist
+                            <br> &nbsp; &nbsp;at file:///Users/abedin/Desktop/Node%20JS/Video%20Sharing%20API/src/controllers/comment.controller.js:201:11
+                            <br> &nbsp; &nbsp;at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+                        </pre>
+                    </body>
+                </html>

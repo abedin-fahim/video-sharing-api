@@ -1,8 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import swaggerUI from 'swagger-ui-express';
+import YAML from 'yamljs';
 
 const app = express();
+const swaggerDoc = YAML.load('./swagger.yaml');
 
 app.use(
   cors({
@@ -32,6 +35,7 @@ import tweetRouter from './routes/tweet.routes.js';
 import videoRouter from './routes/video.routes.js';
 
 // Routes declaration
+app.use('/', swaggerUI.serve, swaggerUI.setup(swaggerDoc));
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/status', statusRouter);
 app.use('/api/v1/comments', commentRouter);
